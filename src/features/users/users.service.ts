@@ -1,62 +1,54 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
+import { Repository } from 'typeorm'
+import { InjectRepository } from '@nestjs/typeorm'
 import Users from './user.entity';
+import hashUtil from 'src/shared/utils/hash.util';
 
 @Injectable()
 export class UsersService {
 
-    private users: Users[] = [
-        {
-            id: "01",
-            name: "Edi M",
-            age: 25,
-            gender: 'MALE',
-            username: "user1",
-            password: "123456",
-        }
-    ];
+    constructor(
+        @InjectRepository(Users)
+        private readonly usersRepository: Repository<Users>,
+    ) { }
 
-    all(): Users[] {
-        return this.users
+    findAll(): Promise<Users[]> {
+        return this.usersRepository.find()
     }
 
-    findById(id: string): Users {
+    findById(id: string): Promise<Users> {
 
-        const user: Users = this.users.find(user => user.id === id)
-
-        if (!user) {
-            throw new NotFoundException(null, 'User not found.')
-        }
-
-        return user
-
-    }
-
-    async findByUsername(username: string): Promise<Users | undefined> {
-        return this.users.find(user => user.username === username)
-    }
-
-    create(user: Users): Users {
-        this.users.push({ ...user, id: `${this.users.length}` })
-        return user
-    }
-
-    update(user: Users): Users {
-        const newUser = this.users.map(item => {
-            if (item.id === user.id) {
-                item = { ...user }
-                return item
-            } else {
-                return item
-            }
+        return this.usersRepository.findOneBy({
+            id
         })
-        this.users = newUser
 
-        return user
     }
 
-    delete(id: string): void {
-        const newUser = this.users.filter(user => user !== this.findById(id))
-        this.users = newUser
+    findByUsername(username: string): Promise<Users> {
+        return this.usersRepository.findOneBy({
+            username
+        })
+    }
+
+    async create(user: Users): Promise<Users> {
+        user.password = await hashUtil.hash(user.password)
+        return this.usersRepository.save(user)
+    }
+
+    async update(user: Users): Promise<Users> {
+        const findUser = await this.findById(user.id)
+        user.password = await hashUtil.hash(user.password)
+        return this.usersRepository.save({ ...findUser, ...user })
+    }
+
+    async delete(id: string): Promise<void> {
+        const findUser = await this.findById(id)
+        if (findUser) {
+            await this.usersRepository.softDelete({
+                id
+            })
+        }
+
     }
 
 }
