@@ -4,10 +4,22 @@ import Users from './user.entity';
 @Injectable()
 export class UsersService {
 
-    private users: Users[] = [];
+    private users: Users[] = [
+        {
+            id: "01",
+            name: "Edi M",
+            age: 25,
+            gender: 'MALE',
+            username: "user1",
+            password: "123456",
+        }
+    ];
 
-    get(id: string): Users {
+    all(): Users[] {
+        return this.users
+    }
 
+    findById(id: string): Users {
 
         const user: Users = this.users.find(user => user.id === id)
 
@@ -19,8 +31,8 @@ export class UsersService {
 
     }
 
-    all(): Users[] {
-        return this.users
+    async findByUsername(username: string): Promise<Users | undefined> {
+        return this.users.find(user => user.username === username)
     }
 
     create(user: Users): Users {
@@ -43,7 +55,7 @@ export class UsersService {
     }
 
     delete(id: string): void {
-        const newUser = this.users.filter(user => user !== this.get(id))
+        const newUser = this.users.filter(user => user !== this.findById(id))
         this.users = newUser
     }
 

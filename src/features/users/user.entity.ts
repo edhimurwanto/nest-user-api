@@ -3,4 +3,6 @@ export default class Users {
     name: string
     age: number
     gender: string
+    username: string
+    password?: string
 }

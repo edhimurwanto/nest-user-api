@@ -8,7 +8,7 @@ export class UsersController {
 
   @Get(':id')
   getUser(@Param('id') id: string): Users {
-    return this.usersService.get(id);
+    return this.usersService.findById(id);
   }
 
   @Get()
